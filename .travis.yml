@@ -1,0 +1,25 @@
+language: generic
+
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t andreluzz/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run -e CI=true andreluzz/react-test npm test
+
+after_success:
+  - docker build -t andreluzz/multi-nginx ./nginx
+  - docker build -t andreluzz/multi-client ./client
+  - docker build -t andreluzz/multi-server ./server
+  - docker build -t andreluzz/multi-worker ./worker
+  # Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take does images to docker hub
+  - docker push andreluzz/multi-nginx
+  - docker push andreluzz/multi-client
+  - docker push andreluzz/multi-server
+  - docker push andreluzz/multi-worker
+
